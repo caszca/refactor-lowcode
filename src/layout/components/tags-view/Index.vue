@@ -1,16 +1,24 @@
 <template>
-  <header id="tags-view-container" class="tags-view-container">
+  <div id="tags-view-container" class="tags-view-container">
     <scroll-pane ref="scrollPane" class="tags-view-wrapper">
       <router-link v-for="tag in visitedViews" ref="tag" :key="tag.path" :class="isActive(tag) ? 'active' : ''" :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }" class="tags-view-item" @click.middle.native="closeSelectedTag(tag)" @contextmenu.prevent.native="openMenu(tag, $event)">
         {{ tag.title }}
-        <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
+        <i v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
+        <!-- <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" /> -->
       </router-link>
     </scroll-pane>
-  </header>
+    <ul v-show="visible" :style="{ left: left + 'px', top: top + 'px' }" class="contextmenu">
+      <!-- <li @click="refreshSelectedTag(selectedTag)">刷新</li> -->
+      <li v-if="!(selectedTag.meta && selectedTag.meta.affix)" @click="closeSelectedTag(selectedTag)">
+        关闭
+      </li>
+      <li @click="closeOthersTags(selectedTag)">关闭其他</li>
+      <li @click="closeAllTags(selectedTag)">关闭全部</li>
+    </ul>
+  </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import ScrollPane from './ScrollPane'
 import path from 'path'
 
@@ -27,15 +35,8 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['sideBar', 'device', 'user', 'avatar', 'sex']),
     visitedViews() {
-      var visit = this.$store.state.tagsView.visitedViews
-      visit = visit.filter((i) => {
-        if (!((i.name === 'Login') || (i.name === 'Register') || (i.name === 'Forget'))) {
-          return i
-        }
-      })
-      return visit
+      return this.$store.state.tagsView.visitedViews
     },
     routes() {
       return this.$store.state.permission.routes
@@ -83,14 +84,14 @@ export default {
       const oldViews = JSON.parse(sessionStorage.getItem('tabViews')) || []
       if (oldViews.length > 0) {
         this.$store.state.tagsView.visitedViews = oldViews
-        sessionStorage.removeItem('tabViews')
+        sessionStorage.clear()
       }
     },
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },
     isActive(route) {
-      return route.path === this.$route.path
+      return (route.path === this.$route.path) || (this.$route.meta.activeMenu === route.path)
     },
     filterAffixTags(routes, basePath = '/') {
       let tags = []
@@ -212,6 +213,7 @@ export default {
       const offsetLeft = this.$el.getBoundingClientRect().left // container margin left
       const offsetWidth = this.$el.offsetWidth // container width
       const maxLeft = offsetWidth - menuMinWidth // left boundary
+      // clientX 以浏览器左上顶角为原点，定位 x 轴坐标
       const left = e.clientX - offsetLeft + 15 // 15: margin right
 
       if (left > maxLeft) {
@@ -298,26 +300,47 @@ $tagsViewHeight: 34px;
     border-bottom-left-radius: 6px;
     box-shadow: -4px 4px 0 0px #f7f8fa;
   }
+  .contextmenu {
+    margin: 0;
+    background: #fff;
+    z-index: 3000;
+    position: absolute;
+    list-style-type: none;
+    padding: 5px 0;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #333;
+    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+    li {
+      margin: 0;
+      padding: 7px 16px;
+      cursor: pointer;
+      &:hover {
+        background: #eee;
+      }
+    }
+  }
+  .hamburger-container {
+    line-height: $tagsViewHeight;
+    height: 100%;
+    float: left;
+    padding: 0 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    &:hover {
+      background: rgba(0, 0, 0, 0.025);
+    }
+  }
 }
-</style>
-
-<style lang="scss">
 //reset element css of el-icon-close
 .tags-view-wrapper {
   .tags-view-item {
     .el-icon-close {
-      width: 16px;
-      height: 16px;
-      vertical-align: 2px;
-      border-radius: 50%;
-      text-align: center;
+      font-size: 12px;
+      margin-left: 20px;
       transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-      transform-origin: 100% 50%;
-      &:before {
-        transform: scale(0.6);
-        display: inline-block;
-        vertical-align: -3px;
-      }
       &:hover {
         background-color: #b4bccc;
         color: #fff;

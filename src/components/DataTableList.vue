@@ -1,19 +1,24 @@
 <template>
-  <DataTableHeader ref="dataTBLMother" :selected-columns.sync="selectedColumns" :default-props="defaultProps.defaultDTHProps" @init-click="refreshInit" @show-search="showSearchPanel" @append-click="appendClick" @edit-click="editClick" @delete-click="deleteClick" @audit-click="auditClick" @export-click="exportClick" @audit-on-change="auditOnChange" @more1-click="more1Click" @more2-click="more2Click" @phmanage-click="phmanageClick" @upload-finish="uploadFinish" @batch-create="batchCreate">
+  <DataTableHeader ref="dataTBLMother" :selected-columns.sync="selectedColumns" :default-props="defaultProps.defaultDTHProps" @init-click="refreshInit" @show-search="showSearchPanel" @append-click="appendClick" @edit-click="editClick" @delete-click="deleteClick" @audit-click="auditClick" @export-click="exportClick" @audit-on-change="auditOnChange" @more1-click="more1Click" @more2-click="more2Click" @upload-finish="uploadFinish" @batch-create="batchCreate">
     <template slot="searchPanel">
       <!-- v-model="searchName" -->
-      <slot name="searchPanel"><BtnSearch ref="BtnSearch" :search-name="searchName" :placeholder="searchPlaceholder" :no-advanced-search="noAdvancedSearch" :search-items="searchItems" @search-click="searchClick" @advanced-search-click="advancedSearchClick" /></slot>
-    </template>
-    <template slot="left">
-      <slot name="left" />
-    </template>
-    <template slot="topOperate">
-      <slot name="topOperate" />
+      <slot name="searchPanel">
+        <BtnSearch ref="BtnSearch" :search-name="searchName" :placeholder="searchPlaceholder" :no-advanced-search="noAdvancedSearch" :search-items="searchItems" @search-click="searchClick" @advanced-search-click="advancedSearchClick" @clean-out-value="onCleanOutValue" @input="onInput">
+          <template #beforeSearch>
+            <slot name="beforeSearch" />
+          </template>
+        </BtnSearch>
+      </slot>
     </template>
     <template slot="moreTopButtons">
       <slot name="moreTopButtons" />
     </template>
+    <template slot="topOperate">
+      <slot name="topOperate" />
+    </template>
     <template slot="body">
+      <!-- 按钮下、列表上的提示区域 -->
+      <slot name="topAlert" />
       <!--列表展示-->
       <el-card shadow="never">
         <slot slot="header" name="cardTitle" />
@@ -21,37 +26,27 @@
           <span>{{ title.mainTitle }}</span>
           <span v-if="title.subTitle">&nbsp;|&nbsp;<strong>{{ title.subTitle || "全部" }}</strong></span>
         </template>
-        <el-table ref="table" v-adaptive="{bottomOffset}" v-loading="loading" border height="100%" :data="dataList" row-key="id" highlight-current-rows @current-change="handleColumnChange" @selection-change="handleSelectionChange" @sort-change="handleSortChange">
+        <el-table ref="table" v-adaptive="{bottomOffset}" v-loading="loading" border height="100" :data="dataList" row-key="id" highlight-current-rows @current-change="handleColumnChange" @selection-change="handleSelectionChange" @sort-change="handleSortChange">
           <el-table-column v-if="checkFlag" fixed :reserve-selection="true" type="selection" width="55" />
           <el-table-column v-else fixed width="55">
             <template slot-scope="scope">
               <el-radio v-model="tableRadio" :label="scope.row"><i /></el-radio>
             </template>
           </el-table-column>
-          <el-table-column v-if="orderList" label="排序" type="index" width="50">
+          <!-- <el-table-column v-if="orderList" label="排序" type="index" width="50">
             <template slot-scope="scope">
               <span>{{ (pageInfo.page - 1) * pageInfo.size + scope.$index + 1 }}</span>
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column v-for="(item, index) in tableColumnItem" :key="index" :show-overflow-tooltip="true" :prop="item.columnName" :label="item.showName" :width="item.width" :sortable="item.sortable?'custom':false">
             <template #default="scope">
-              <!-- 列表自定义内容:由于嵌套三层接收不到直接加if判断 -->
-              <div v-if="item.columnName === 'backTime'">{{ scope.row[item.columnName] | filterDateDay }}</div>
-              <div v-if="item.columnName === 'recentReportTime'">{{ scope.row[item.columnName] | filterDateDay }}</div>
-              <div v-else-if="item.columnName === 'approveStatus'">{{ scope.row[item.columnName] | filterApproveStatus }}</div>
-              <div v-else-if="item.columnName === 'reportType'">{{ scope.row[item.columnName] | filterReportType }}</div>
-              <div v-else-if="item.columnName === 'needcal-problems'">{{ scope.row['problems'] | filterProblems }}</div>
-              <div v-else-if="item.columnName === 'shift-status'">{{ scope.row['status'] | filterStatus }}</div>
-              <div v-else-if="item.columnName === 'publicityType'">{{ scope.row[item.columnName] | filterPublicityType }}</div>
-              <div v-else-if="item.columnName === 'reportResult'">{{ scope.row[item.columnName] | filterReportResult }}</div>
+              <!-- 列表自定义显示的内容 columnName 必须以 customize- 开头 -->
+              <slot v-if="item.columnName.startsWith('customize-')" :name="item.columnName.replace('customize-','')" :row="scope.row" />
               <!-- 特殊列格式 -->
               <div v-else-if="item.columnName.endsWith('Time')">{{ scope.row[item.columnName] | filterDateTime }}</div>
               <div v-else-if="item.columnName.endsWith('Day')">{{ scope.row[item.columnName] | filterDateDay }}</div>
               <div v-else-if="item.columnName === 'isAudit'">{{ scope.row[item.columnName] | filterIsAudit }}</div>
-              <div v-else-if="item.columnName === 'status'">{{ scope.row[item.columnName] | filterTeamStatus }}</div>
-              <div v-else-if="item.columnName === 'pyccType'">{{ scope.row[item.columnName] | filterPyccType }}</div>
-              <!-- 列表自定义显示的内容 columnName 必须以 customize- 开头 -->
-              <slot v-else-if="item.columnName.startsWith('customize-')" :name="item.columnName.replace('customize-','')" :row="scope.row" />
+              <div v-else-if="item.columnName === 'cost'">{{ scope.row[item.columnName] }}元</div>
               <div v-else>{{ scope.row[item.columnName] || "--" }}</div>
             </template>
           </el-table-column>
@@ -61,17 +56,13 @@
               <el-button v-if="button.visible.show" :type="button.visible.type" size="mini" :title="button.visible.name" @click="view(scope.row)">
                 <svg-icon icon-class="axt-view" />
               </el-button>
-              <el-button v-if="button.update.show" :type="button.update.type" icon="el-icon-edit" size="mini" :title="button.update.name" @click="editClick(scope.row)" />
+              <el-button v-if="button.update.show" :type="button.update.type" :disabled="button.update.disabled ? true : false" icon="el-icon-edit" size="mini" :title="button.update.name" @click="editClick(scope.row)" />
               <!--列表数据右方的操作按钮-->
               <slot name="rightOperate" :row="scope.row" />
               <el-button v-if="button.delete.show" :type="button.delete.type" icon="el-icon-delete" size="mini" :title="button.delete.name" @click="remove([scope.row])" />
               <el-button v-if="button.up.show" :type="button.up.type" icon="el-icon-top" size="mini" :loading="buttonLoading.up" :title="button.up.name" @click="move(scope.row, true)" />
               <el-button v-if="button.down.show" :type="button.down.type" icon="el-icon-bottom" size="mini" :loading="buttonLoading.down" :title="button.down.name" @click="move(scope.row, false)" />
               <el-button v-if="button.audit.show" :type="button.audit.type" icon="el-icon-s-check" size="mini" :title="button.audit.name" @click="auditClick([scope.row], null)" />
-              <el-button v-if="button.send.show" :type="button.send.type" icon="el-icon-s-promotion" size="mini" :title="button.send.name" @click="sendClick(scope.row)" />
-              <!-- 带禁用的自定义编辑按钮 -->
-              <el-button v-if="button._update.show" :type="button._update.type" icon="el-icon-edit" size="mini" :disabled="!scope.row.status" :title="button._update.name" @click="editClick(scope.row)" />
-
               <slot name="rightbtn" :row="scope.row" />
             </template>
           </el-table-column>
@@ -91,7 +82,6 @@ import VPage from '@/components/Pagination'
 import moment from 'moment'
 import adaptive from '@/directive/el-table'
 import CONSTANT from '@/constant'
-import customAPI from '@/api/customizeSearch'
 
 export default {
   name: 'DataTableList',
@@ -120,66 +110,6 @@ export default {
         case CONSTANT.AUDIT_STATUS.BACK: return CONSTANT.AUDIT_STATUS.BACKNAME
         default: return CONSTANT.AUDIT_STATUS.SAVENAME
       }
-    },
-    filterTeamStatus(val) {
-      switch (val) {
-        case 1: return '校赛'
-        case 2: return '省赛初赛'
-        case 3: return '省赛决赛'
-      }
-    },
-    filterPyccType(val) {
-      switch (val) {
-        case 1: return '专科'
-        case 2: return '本科'
-        case 3: return '研究生'
-      }
-    },
-    filterReportResult(val) {
-      switch (val) {
-        case 1: return '未上报'
-        case 2: return '未出结果'
-        case 3: return '已通过'
-        case 4: return '已拒绝'
-        default: return '--'
-      }
-    },
-    filterApproveStatus(val) {
-      switch (val) {
-        case 1: return '待审核'
-        case 2: return '已通过'
-        case 3: return '已拒绝'
-        default: return '待审核'
-      }
-    },
-    filterStatus(val) {
-      switch (val) {
-        case false: return '锁定'
-        case true: return '开放'
-        default: return '锁定'
-      }
-    },
-    filterPublicityType(val) {
-      switch (val) {
-        case 1: return '是'
-        case 2: return '否'
-        default: return '--'
-      }
-    },
-    filterReportType(val) {
-      switch (val) {
-        case 1: return '是'
-        case 2: return '否'
-        default: return '--'
-      }
-    },
-    filterProblems(val) {
-      let name = ''
-      val.forEach(e => {
-        name = e.name + '、' + name
-      })
-      name = name.slice(0, name.length - 1)
-      return name
     }
   },
   props: {
@@ -198,9 +128,7 @@ export default {
             operateShow: true, // 最右边的按钮操作面板是否出现
             checkFlag: true, // 是否出现最左边的checkBox
             showPage: true, // 是否显示底部翻页
-            autoInit: true, // 初始时是否显示数据
-            hasOwnGet: false, // 是否有自己的getSomeRecords方法
-            orderList: false // 是否使用1,2,3...方式排序
+            autoInit: true // 初始时是否显示数据
           },
           initSearchWords: { // 初始时查询的三个关键词
             searchKey: { },
@@ -235,8 +163,6 @@ export default {
         andor: { }
       },
       selectedColumns: [],
-      // loading: true,
-      // layout: 'total, sizes, prev, pager, next, jumper',
       dataList: [],
       pageInfo: { page: 1, size: 25 },
       totalSize: 0,
@@ -355,12 +281,6 @@ export default {
       }
       return '请输入名称'
     }
-    // variables() {
-    //   return variables
-    // },
-    // colors() {
-    //   return eVariables
-    // }
   },
   watch: {
     autoInit: {
@@ -378,17 +298,13 @@ export default {
       },
       deep: true,
       immediate: true
-    },
-    selectedColumns: {
-      handler(val) {
-        this.$emit('selectedColumnsChange', val)
-      },
-      deep: true
     }
-  },
-  created() {
-    // console.log(this.defaultProps)
-    // console.log(this.operateShow)
+    // selectedColumns: {
+    //   handler(val) {
+    //     this.$emit('selectedColumnsChange', val)
+    //   },
+    //   deep: true
+    // }
   },
   mounted() {
     this.thisEvents = JSON.parse(JSON.stringify(this._events))
@@ -400,15 +316,12 @@ export default {
       btn.update.show,
       btn.up.show,
       btn.down.show,
-      btn.audit.show,
-      btn.send.show,
-      btn._update.show
+      btn.audit.show
     ]
     num = arr.reduce((acc, cur) => {
       acc = cur ? acc + 1 : acc
       return acc
-    }, 0)
-
+    }, 0) + btn.count.num
     var width = num * 46
     if (width < 60) {
       width = 60
@@ -458,122 +371,20 @@ export default {
         try {
           if (this.defaultProps.someFlags && this.defaultProps.someFlags.hasOwnGet) {
             // 独立查询方法 用if嵌套
-            switch (this.defaultProps.keyWord) {
-              case 'workManage':
-                resp = await customAPI.retrieve({
-                  pageNum: this.pageInfo.page,
-                  pageSize: this.pageInfo.size,
-                  roleId: this.usedSearchWords.searchKey.roleNames ? this.usedSearchWords.searchKey.roleNames : '',
-                  searchKey: this.usedSearchWords.searchKey.name ? this.usedSearchWords.searchKey.name : ''
-                })
-                this.loading = false
-                break
-              case 'ShiftArrangement':
-                resp = await customAPI.retrieveList({
-                  pageNum: this.pageInfo.page,
-                  pageSize: this.pageInfo.size,
-                  collegeId: this.usedSearchWords.searchKey.collegeId ? this.usedSearchWords.searchKey.collegeId : -1,
-                  gradeId: this.usedSearchWords.searchKey.ssnj ? this.usedSearchWords.searchKey.ssnj : -1,
-                  searchKey: this.usedSearchWords.searchKey.name ? this.usedSearchWords.searchKey.name : ''
-                })
-                this.loading = false
-                break
-              case 'StudentArrange':
-                resp = await customAPI.studentRetrieveList({
-                  pageNum: this.pageInfo.page,
-                  pageSize: this.pageInfo.size,
-                  classId: this.usedSearchWords.searchKey.classId ? this.usedSearchWords.searchKey.classId : -1,
-                  collegeId: this.usedSearchWords.searchKey.collegeId ? this.usedSearchWords.searchKey.collegeId : -1,
-                  majorId: this.usedSearchWords.searchKey.majorId ? this.usedSearchWords.searchKey.majorId : -1,
-                  type: this.usedSearchWords.searchKey.type ? this.usedSearchWords.searchKey.type : 1,
-                  searchKey: this.usedSearchWords.searchKey.name ? this.usedSearchWords.searchKey.name : ''
-                })
-                this.loading = false
-                break
-              case 'RecordChangement':
-                resp = await customAPI.getSomeRecords2({
-                  keyWords: 'StudentRollChange',
-                  pageInfo: this.pageInfo,
-                  treeInfo: this.treeInfo,
-                  searchKey: this.usedSearchWords.searchKey,
-                  sort: this.sortStr,
-                  reg: this.usedSearchWords.regKey,
-                  andor: this.usedSearchWords.andor
-                })
-                this.loading = false
-                break
-              case 'InformSearch':
-                if (!this.usedSearchWords.searchKey.collegeId) {
-                  resp = { data: { content: [] }}
-                } else {
-                  resp = await customAPI.getSomeRecords2({
-                    keyWords: this.keyWord.view,
-                    pageInfo: this.pageInfo,
-                    treeInfo: this.treeInfo,
-                    searchKey: this.usedSearchWords.searchKey,
-                    sort: this.sortStr,
-                    reg: this.usedSearchWords.regKey,
-                    andor: this.usedSearchWords.andor
-                  })
-                }
-                this.loading = false
-                break
-              case 'TeacherSearch':
-                if (!this.usedSearchWords.searchKey.classId) {
-                  resp = { data: { content: [] }}
-                } else {
-                  resp = await listAPI.getSomeRecords({
-                    keyWords: this.keyWord.view,
-                    pageInfo: this.pageInfo,
-                    treeInfo: this.treeInfo,
-                    searchKey: this.usedSearchWords.searchKey,
-                    sort: this.sortStr,
-                    reg: this.usedSearchWords.regKey,
-                    andor: this.usedSearchWords.andor
-                  })
-                }
-                this.loading = false
-                break
-              case 'ViewLeaveReturn':
-                resp = await customAPI.getSomeRecords2({
-                  keyWords: this.keyWord.view,
-                  pageInfo: this.pageInfo,
-                  treeInfo: this.treeInfo,
-                  searchKey: this.usedSearchWords.searchKey,
-                  sort: this.sortStr,
-                  reg: this.usedSearchWords.regKey,
-                  andor: this.usedSearchWords.andor
-                })
-                this.loading = false
-                break
-              case 'ViewStudentRollInfo':
-                resp = await customAPI.getSomeRecords2({
-                  keyWords: this.keyWord.view,
-                  pageInfo: this.pageInfo,
-                  treeInfo: this.treeInfo,
-                  searchKey: this.usedSearchWords.searchKey,
-                  sort: this.sortStr,
-                  reg: this.usedSearchWords.regKey,
-                  andor: this.usedSearchWords.andor
-                })
-                this.loading = false
-                break
-              case 'ViewVacationInfo':
-                resp = await customAPI.getSomeRecords2({
-                  keyWords: this.keyWord.view,
-                  pageInfo: this.pageInfo,
-                  treeInfo: this.treeInfo,
-                  searchKey: this.usedSearchWords.searchKey,
-                  sort: this.sortStr,
-                  reg: this.usedSearchWords.regKey,
-                  andor: this.usedSearchWords.andor
-                })
-                this.loading = false
-                break
-            }
+            // switch (this.defaultProps.keyWord) {
+            //   case 'workManage':
+            //     resp = await customAPI.retrieve({
+            //       pageNum: this.pageInfo.page,
+            //       pageSize: this.pageInfo.size,
+            //       roleId: this.usedSearchWords.searchKey.roleNames ? this.usedSearchWords.searchKey.roleNames : '',
+            //       searchKey: this.usedSearchWords.searchKey.name ? this.usedSearchWords.searchKey.name : ''
+            //     })
+            //     this.loading = false
+            //     break
+            // }
             // 这里把最外层的loading放到了每个case分支里，否则在emit出去的方法没走完之前loading会变成false
             if (!resp) {
-              this.$emit('self-init', this.pageInfo)
+              this.$emit('self-init', this.pageInfo, this.sortStr, this.usedSearchWords)
               return
             }
           } else {
@@ -630,6 +441,12 @@ export default {
     // #endregion
     showSearchPanel(flag) {
       this.$forceUpdate()
+    },
+    onCleanOutValue() {
+      this.$emit('clean-out-value')
+    },
+    onInput(val) {
+      this.$emit('input', val)
     },
     auditOnChange(value) {
       this.$emit('audit-on-change', value)
@@ -771,14 +588,6 @@ export default {
         })
       }
     },
-    // 上报节点
-    async sendClick(row) {
-      if (Object.prototype.hasOwnProperty.call(this.thisEvents, 'send-click')) {
-        this.$emit('send-click', row)
-      } else {
-        console.log(row)
-      }
-    },
     // #endregion
 
     // 按钮查询
@@ -790,13 +599,6 @@ export default {
       if (typeof this.searchName === 'string') {
         this.$set(searchKey, this.searchName, searchInfo)
         this.$set(regKey, this.searchName, CONSTANT.SEARCH_OPERATOR.LIKE)
-      // } else {
-      //   for (var i=0;i<this.searchName.length;i++) {
-      //     this.$set(searchKey, this.searchName[i], searchInfo)
-      //     this.$set(regKey, this.searchName[i], CONSTANT.SEARCH_OPERATOR.LIKE)
-      //     this.$set(andor, this.searchName[i], false)
-      //   }
-      //   this.$set(this.nowSearchWords, 'andor', andor)
       }
       this.$set(this.nowSearchWords, 'searchKey', searchKey)
       this.$set(this.nowSearchWords, 'regKey', regKey)
@@ -816,8 +618,18 @@ export default {
           if (item[0].type === 'input') {
             this.$set(searchKey, keys[i], searchInfo[keys[i]])
             this.$set(regKey, keys[i], CONSTANT.SEARCH_OPERATOR.LIKE)
+            if (item[0].doubleWords && item[0].doubleWords.length > 0) {
+              this.$set(andor, keys[i], false)
+              item[0].doubleWords.forEach(e => {
+                this.$set(searchKey, e, searchInfo[keys[i]])
+                this.$set(regKey, e, CONSTANT.SEARCH_OPERATOR.LIKE)
+                this.$set(andor, e, false)
+              })
+            }
           } else if (item[0].type === 'select') {
             this.$set(searchKey, keys[i], searchInfo[keys[i]])
+          } else if (item[0].type === 'cascader') {
+            this.$set(searchKey, keys[i], searchInfo[keys[i]][searchInfo[keys[i]].length - 1])
           } else if (item[0].type === 'year') {
             if (searchInfo[keys[i]]) {
               this.$set(searchKey, keys[i], searchInfo[keys[i]].getFullYear())
@@ -832,18 +644,13 @@ export default {
             }
           } else if (item[0].type === 'date') {
             if (searchInfo[keys[i]] && searchInfo[keys[i]].length) {
-              this.$set(searchKey, keys[i], { beginDate: searchInfo[keys[i]][0], endDate: searchInfo[keys[i]][1] })
+              const endDate = new Date(searchInfo[keys[i]][1])
+              endDate.setHours(23, 59, 59, 0)
+              this.$set(searchKey, keys[i], { beginDate: searchInfo[keys[i]][0], endDate: endDate })
             } else {
               this.$set(searchKey, keys[i], [])
             }
             this.$set(regKey, keys[i], CONSTANT.SEARCH_OPERATOR.RANGE)
-          } else if (item[0].type === 'double') {
-            this.$set(searchKey, keys[i], searchInfo[keys[i]])
-            this.$set(regKey, keys[i], CONSTANT.SEARCH_OPERATOR.LIKE)
-            this.$set(andor, keys[i], false)
-            this.$set(searchKey, item[0].doubleWords, searchInfo[keys[i]])
-            this.$set(regKey, item[0].doubleWords, CONSTANT.SEARCH_OPERATOR.LIKE)
-            this.$set(andor, item[0].doubleWords, false)
           }
         }
       }
@@ -862,9 +669,6 @@ export default {
     async more2Click(row) {
       this.$emit('more2-click', row)
     },
-    async phmanageClick() {
-      this.$emit('phmanage-click')
-    },
     // #endregion
 
     // 刷新操作
@@ -872,18 +676,7 @@ export default {
       this.$set(this.nowSearchWords, 'searchKey', {})
       this.$set(this.nowSearchWords, 'regKey', {})
       this.$set(this.nowSearchWords, 'andor', {})
-      // console.log(this.initSearchWords)
-      // if (!this.search) {
-      //
-      //   this.$emit('update:regKey', {})
-      //   this.$emit('update:searchKey', {})
-      //   this.$emit('update:treeInfo', {})
-      //   this.$emit('update:topTreeInfo', [])
-      //   this.search = false
-      //   setTimeout(() => { this.initDataList() }, 500)
-      // } else {
       this.initDataList()
-      // }
     },
     // 自定义排序
     handleSortChange(column) {
@@ -956,77 +749,3 @@ export default {
   }
 }
 </script>
-
-<!-- <style scoped lang="scss">
-
-// import variables from '@/assets/css/variables.scss'
-// import eVariables from '@/assets/css/element-variables.scss'
-// @import "~@/assets/css/variables.scss";
-// .primary {
-//   background-color: $--color-primary;
-//   border-color: $--color-primary;
-//   &:hover {
-//     opacity: 0.8;
-//   }
-// }
-// ::v-deep .el-card__body {
-//   padding: 0;
-// }
-// .curd-opts {
-//   display: -webkit-flex;
-//   display: flex;
-//   align-items: center;
-//   justify-content: space-between;
-//   margin-bottom: 10px;
-// }
-
-// .color-yellow {
-//   color: #ffb400;
-// }
-// .color-red {
-//   color: #f5585f;
-// }
-// .color-green {
-//   color: #009140;
-// }
-// .color-blue {
-//   color: #1890ff;
-// }
-
-// .button-group {
-//   display: flex;
-//   justify-content: space-between;
-//   width: 100%;
-// }
-
-// .checkbox-item:nth-last-of-type(1) {
-//   margin-right: 30px;
-// }
-/*修改table 表体的背景颜色和文字颜色*/
-::v-deep .el-table {
-  tr th,
-  tr td {
-      border-right: none;
-    }
-}
-
-::v-deep .el-card {
-  border: 0px solid #f2f2f2 !important;
-}
-
-.tableData {
-  .el-table--scrollable-y{
-    overflow-y: hidden !important;
-  }
-}
-// ::v-deep .el-table::before {
-//   height: 0px;
-// }
-// ::v-deep .el-table--border::after {
-//   width: 0px;
-// }
-// ::v-deep .el-table--border {
-//   border: none;
-// }
-</style>
- -->

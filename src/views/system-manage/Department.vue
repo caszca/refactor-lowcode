@@ -14,14 +14,15 @@ export default {
           // sort: { properties: 'name', direction: 'DESC' },
           sort: { properties: 'code', direction: 'ASC' },
           defaultDTHProps: {
-            keyWord: { edit: 'BaseDepartment' },
+            keyWord: { edit: 'SysOrganizationInfo' },
             buttonProps: { update: { show: true }, create: { show: true }, delete: { show: true }, up: { show: false }, down: { show: false }, batchCreate: { show: false }},
-            searchPanel: false
+            searchPanel: false,
+            showButtonGroupSearch: false
           }
         },
 
         defaultSDProps: {
-          keyWord: 'BaseDepartment',
+          keyWord: 'SysOrganizationInfo',
           formItems: [
             { name: '完整名称', field: 'allNodeNames', type: 'input', disabled: true },
             { name: '编码', field: 'code', type: 'input' },
@@ -35,6 +36,8 @@ export default {
         }
       }
     }
+  },
+  methods: {
   }
 }
 </script>

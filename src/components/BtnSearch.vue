@@ -5,6 +5,7 @@
       <el-button size="mini" type="primary" icon="el-icon-search" @click="searchClick('common')">搜索</el-button>
     </div>
     <div v-else class="advanced-search-field-box">
+      <slot name="beforeSearch" />
       <div v-for="(item, index) in searchItems" :key="index" class="search-item">
         <slot v-if="item.type.startsWith('customize')" :name="item.slot" />
         <el-cascader v-if="item.type==='cascader'" v-model="waitSearch[item.field]" size="mini" :loading="loading" :options="item.options" :props="{
@@ -13,8 +14,7 @@
         <el-select v-if="item.type==='select'" v-model="waitSearch[item.field]" size="mini" :placeholder="item.placeholder?item.placeholder:item.name" :loading="loading" clearable>
           <el-option v-for="citem in item.options" :key="citem.id" :label="citem[`${item.label||'name'}`]" :value="citem[`${item.val||'id'}`]" />
         </el-select>
-        <el-input v-if="item.type==='input'" v-model="waitSearch[item.field]" size="mini" :placeholder="item.placeholder?item.placeholder:item.name" clearable />
-        <el-input v-if="item.type==='double'" v-model="waitSearch[item.field]" size="mini" :placeholder="item.placeholder?item.placeholder:item.name" clearable :double-words="item.doubleWords" />
+        <el-input v-if="item.type==='input'" v-model="waitSearch[item.field]" size="mini" :placeholder="item.placeholder?item.placeholder:item.name" clearable :double-words="item.doubleWords" />
         <el-date-picker v-if="item.type==='year'" v-model="waitSearch[item.field]" size="mini" type="year" :placeholder="item.placeholder?item.placeholder:item.name" />
         <el-date-picker v-if="item.type==='day'" v-model="waitSearch[item.field]" value-format="yyyy-MM-dd" size="mini" type="date" :placeholder="item.placeholder?item.placeholder:item.name" />
         <el-date-picker v-if="item.type==='date'" v-model="waitSearch[item.field]" size="mini" type="daterange" :start-placeholder="item.placeholder?item.placeholder:item.name+'：从'" :end-placeholder="item.placeholder?item.placeholder:item.name+'：到'" />
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-// import { isObjEmpty, getValueType } from '@/utils/common'
+import { isObjEmpty, getValueType } from '@/utils/common'
 // import treeAPI from '@/api/tree'
 // import listAPI from '@/api/list'
 import { resetForm } from '@/utils/common'
@@ -59,20 +59,20 @@ export default {
     }
   },
   watch: {
-    // waitSearch: {
-    //   handler(newVal) {
-    //     // 父组件有 v-model 时的操作
-    //     this.$emit('input', newVal)
-    //     // 是否是空字符串（no-advanced-search === true）
-    //     const blankString = getValueType(newVal) === 'string' && newVal === ''
-    //     // 是否是对象并且对象中的值全为空（no-advanced-search === false）
-    //     const blankStringObject = getValueType(newVal) === 'object' && isObjEmpty(newVal)
-    //     if (blankString || blankStringObject) {
-    //       this.$emit('search', newVal)
-    //     }
-    //   },
-    //   deep: true
-    // }
+    waitSearch: {
+      handler(newVal) {
+        // 父组件有 v-model 时的操作
+        this.$emit('input', newVal)
+        // 是否是空字符串（no-advanced-search === true）
+        const blankString = getValueType(newVal) === 'string' && newVal === ''
+        // 是否是对象并且对象中的值全为空（no-advanced-search === false）
+        const blankStringObject = getValueType(newVal) === 'object' && isObjEmpty(newVal)
+        if (blankString || blankStringObject) {
+          this.$emit('search', newVal)
+        }
+      },
+      deep: true
+    }
   },
   create() {
     this.waitSearch = _.cloneDeep(this.value)
@@ -116,6 +116,7 @@ export default {
     },
     reset() {
       this.waitSearch = resetForm(this.waitSearch)
+      this.$emit('clean-out-value')
       this.$emit('search-click', this.waitSearch)
     }
   }

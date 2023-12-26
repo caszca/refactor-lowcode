@@ -10,7 +10,7 @@ import './utils/forDialog'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
-const whiteList = ['/Login', '/Forget', '/sso/ahut', '/404'] // no redirect whitelist
+const whiteList = ['/Login', '/Forget', '/sso/ahut', '/404', '/Register'] // no redirect whitelist
 
 router.beforeEach(async(to, from, next) => {
   NProgress.start()
@@ -47,6 +47,7 @@ router.beforeEach(async(to, from, next) => {
           } catch (error) {
             // remove token and go to login page to re-login
             await store.dispatch('user/resetToken')
+            console.log(error)
             Message.error(error.message || '请求超时，请重试……')
             next(`/Login?redirect=${to.path}`)
             NProgress.done()

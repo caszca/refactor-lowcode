@@ -8,12 +8,6 @@
         <!--左侧插槽-->
         <slot name="left" />
         <el-button v-if="button.create.show" size="mini" :type="button.create.type" icon="el-icon-plus" @click="$emit('append-click')">{{ button.create.name }}</el-button>
-        <div v-if="button.batchCreate.show" style="padding-left:10px;padding-right:10px;">
-          <el-upload ref="upload" v-model="fileList" action :file-list="fileList" :show-file-list="false" :http-request="handleUpload">
-            <el-button size="small" icon="el-icon-upload" :type="button.batchCreate.type">{{ button.batchCreate.name }}</el-button>
-          </el-upload>
-        </div>
-        <el-button v-if="button._batchCreate.show" size="mini" :type="button._batchCreate.type" icon="el-icon-upload" @click="$emit('batch-create')">{{ button._batchCreate.name }}</el-button>
         <el-button v-if="button.update.show" size="mini" :type="button.update.type" icon="el-icon-edit" :disabled="selectedColumns.length != 1" @click="edit(selectedColumns[0])">{{ button.update.name }}</el-button>
         <el-button v-if="button.delete.show" :type="button.delete.type" icon="el-icon-delete" size="mini" :disabled="selectedColumns.length < 1" @click="remove(selectedColumns)">{{ button.delete.name }}</el-button>
         <el-tooltip class="item" effect="dark" content="直接点击会导出当前全部内容，否则请先选择需要导出的项目后再点击。" placement="top">
@@ -21,7 +15,11 @@
         </el-tooltip>
         <el-button v-if="button.more1.show" size="mini" :type="button.more1.type" icon="el-icon-circle-plus-outline" @click="more1Click(selectedColumns)">{{ button.more1.name }}</el-button>
         <el-button v-if="button.more2.show" size="mini" :type="button.more2.type" icon="el-icon-s-promotion" @click="more2Click(selectedColumns)">{{ button.more2.name }}</el-button>
-        <el-button v-if="button.phmanage.show" size="mini" :type="button.phmanage.type" icon="el-icon-setting" @click="phmanageClick()">{{ button.phmanage.name }}</el-button>
+        <div v-if="button.batchCreate.show" style="padding-left:10px;padding-right:10px;">
+          <el-upload ref="upload" v-model="fileList" action :file-list="fileList" :show-file-list="false" :http-request="handleUpload">
+            <el-button size="small" icon="el-icon-upload" :type="button.batchCreate.type">{{ button.batchCreate.name }}</el-button>
+          </el-upload>
+        </div>
         <slot name="moreTopButtons" />
         <div v-if="button.audit.show" style="padding-left:10px;padding-right:10px;">
           <el-dropdown ref="auditButton" split-button size="mini" :type="button.audit.type" :disabled="selectedColumns.length < 1" @command="auditDropdownSelect" @click="auditDropdownClick(selectedColumns)">{{ auditButtonName }}
@@ -39,7 +37,7 @@
       <!--右侧-->
       <slot name="right" />
       <el-button-group v-if="showButtonGroup">
-        <el-button size="mini" icon="el-icon-search" title="搜索" @click="showSearch" />
+        <el-button v-if="showButtonGroupSearch" size="mini" icon="el-icon-search" title="搜索" @click="showSearch" />
         <el-button size="mini" icon="el-icon-refresh" title="刷新" @click="initData" />
         <!-- 字段配置以后不再选择性展示 -->
         <el-popover placement="bottom-end" width="100" trigger="click">
@@ -49,10 +47,7 @@
         </el-popover>
       </el-button-group>
     </div>
-    <el-card shadow="never">
-      <slot slot="header" name="cardTitle" />
-      <slot name="body" />
-    </el-card>
+    <slot name="body" />
   </div>
 </template>
 
@@ -77,7 +72,8 @@ export default {
           allTableColumns: [],
           searchPanel: false, // 初始是否出现搜索按钮
           showTopButtons: true, // 是否显示顶部按钮
-          showButtonGroup: true // 是否显示右上角按钮组
+          showButtonGroup: true, // 是否显示右上角按钮组
+          showButtonGroupSearch: true // 是否显示右上角搜索按钮
         }
       }
     },
@@ -86,23 +82,17 @@ export default {
   data() {
     return {
       fileList: [],
-      // treeTableData: [],
       tableColumnItem: [],
-      // auditList: [], // 审核checkbox容器
       checkAll: true,
       indeterminate: false,
-      // loading: true,
-      // isAllSelect: false,
       auditButtonName: '',
       showSearchPanel: false,
       thisEvents: '',
-      showButtonGroup: true
+      showButtonGroup: true,
+      showButtonGroupSearch: true
     }
   },
   computed: {
-    // variables() {
-    //   return variables
-    // },
     keyWord() {
       var key = {}
       this.$set(key, 'edit', this.defaultProps.keyWord.edit)
@@ -142,21 +132,16 @@ export default {
         visible: { show: false, name: '查看详情', type: 'info' },
         create: { show: false, name: '新增', type: 'primary' },
         batchCreate: { show: false, name: '导入', type: 'primary' },
-        _batchCreate: { show: false, name: '批量导入', type: 'primary' },
         update: { show: false, name: '修改', type: 'info' },
-        _update: { show: false, name: '修改', type: 'info' },
         delete: { show: false, name: '删除', type: 'danger' },
         search: { show: false, name: '查询' },
         up: { show: false, name: '上移', type: 'warning' },
         down: { show: false, name: '下移', type: 'warning' },
         export: { show: false, name: '导出', type: 'warning' },
-        // batchExport: { show: false, name: '全部导出', type:'warning' },
         more1: { show: false, name: '更多操作1', type: 'info' },
         more2: { show: false, name: '更多操作2', type: 'info' },
-        phmanage: { show: false, name: '字段管理', type: 'warning' },
         audit: { show: false, name: '审核', type: 'primary', showPass: true, showNotPass: true, showSave: true, showBack: true },
-        change: { show: false, name: '数据更新', type: 'primary' },
-        send: { show: false, name: '上报', type: 'primary' }
+        count: { num: 0 }
       }
       return arrangeButton(this.buttonProps, btn)
     }
@@ -183,6 +168,9 @@ export default {
     if (this.defaultProps.showButtonGroup === false) {
       this.$set(this, 'showButtonGroup', false)
     } else { this.$set(this, 'showButtonGroup', true) }
+    if (this.defaultProps.showButtonGroupSearch === false) {
+      this.$set(this, 'showButtonGroupSearch', false)
+    } else { this.$set(this, 'showButtonGroupSearch', true) }
     // this.$emit('init-click')
   },
   methods: {
@@ -232,9 +220,6 @@ export default {
     // 更多内容2
     async more2Click(row) {
       this.$emit('more2-click', row)
-    },
-    async phmanageClick() {
-      this.$emit('phmanage-click')
     },
     // 导入数据
     async handleUpload(para) {

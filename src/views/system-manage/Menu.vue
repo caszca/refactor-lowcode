@@ -13,7 +13,8 @@ export default {
         defaultDTTProps: {
           defaultDTHProps: {
             keyWord: { edit: 'SysMenu' },
-            searchPanel: false
+            searchPanel: false,
+            showButtonGroupSearch: false
           }
         },
         defaultSDProps: {
@@ -25,7 +26,6 @@ export default {
             { name: '图标', field: 'icon', type: 'icon' },
             { name: '路由', field: 'path', type: 'input' },
             { name: '组件目录', field: 'component', type: 'input' },
-            { name: '是否字段全显', field: 'autoField', type: 'switch' },
             { name: '备注', field: 'remarks', type: 'textarea' }
           ],
           formRules: {

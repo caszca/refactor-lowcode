@@ -16,9 +16,9 @@
 </template>
 
 <script>
-// import downAPI from '@/api/common'
-import customAPI from '@/api/customizeSearch'
+import downAPI from '@/api/common'
 import IEAPI from '@/api/importAndExport'
+import customAPI from '@/api/customizeSearch'
 import DlgBasic from '@/components/DlgBasic'
 
 export default {
@@ -116,19 +116,21 @@ export default {
     async downloadTemplate() {
       // 更新为以后的模板 都是后端代码生成
       // const templateFile = getTemplateFile(this.keyWords, '.xls')
+      console.log(this.defaultProps)
       try {
         // this.importDialog.show = false
         this.showDialog(false)
         this.fullScreenLoading()
         let content
         if (this.defaultProps.keyWords) {
-          if (this.defaultProps.keyWords === 'workManage') {
+          if (this.defaultProps.keyWords === 'StudentCertificateInfo') {
             content = await customAPI.template()
-          } else if (this.defaultProps.keyWords === 'shiftArrange') {
-            content = await customAPI.leaderTemplate()
+          } else if (this.defaultProps.keyWords === 'BaseUser') {
+            content = await downAPI.templateBaseUser()
           }
+        } else {
+          // 暂时没有导出模板接口
         }
-
         this.fullScreenLoading().close()
         this.downloadFile(content, '批量导入模板.xls')
       } catch (error) {
@@ -150,10 +152,14 @@ export default {
       try {
         this.showDialog(false)
         this.fullScreenLoading()
-        if (this.defaultProps.keyWords === 'workManage') {
-          await customAPI.batchImport(this.file)
-        } else if (this.defaultProps.keyWords === 'shiftArrange') {
-          await customAPI.leaderBatchImport(this.file)
+        if (this.defaultProps.keyWords) {
+          console.log(this.defaultProps.keyWords)
+          if (this.defaultProps.keyWords === 'StudentCertificateInfo') {
+            await IEAPI.importInfo('StudentCertificateInfo', this.file)
+          }
+          if (this.defaultProps.keyWords === 'BaseUser') {
+            await IEAPI.importInfo('BaseUser', this.file)
+          }
         } else {
           await IEAPI.importInfo(this.defaultProps.keyWords, this.file)
         }

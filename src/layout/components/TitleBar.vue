@@ -7,6 +7,17 @@
       <span>{{ settings.title }}</span>
     </div>
     <div class="right-menu">
+      <el-popover placement="bottom" width="400" trigger="click" popper-class="title-popover">
+        <section>
+          <div v-for="item in fileList" :key="item.hash" class="upload-list-item">
+            <span>{{ item.fileName }}</span>
+            <el-progress :percentage="item.percent" style="white-space: nowrap;" />
+          </div>
+        </section>
+        <!-- <div slot="reference" :class="`upload-list ${fileList.some(e=>e.percent<100)?'auto-rotate':''}`" :title="`${fileList.some(e=>e.percent<100)?'文件上传中':'上传列表'}`">
+          <i class="el-icon-sort" />
+        </div> -->
+      </el-popover>
       <el-avatar v-if="$store.getters.userInfo.headImage" :size="36" :src="$store.getters.userInfo.headImage" />
       <el-avatar v-else :size="36" icon="el-icon-user-solid" />
       <el-dropdown trigger="click">
@@ -16,7 +27,7 @@
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
           <el-dropdown-item @click.native="personalInfo">
-            <span>个人信息</span>
+            <span>信息维护</span>
           </el-dropdown-item>
           <el-dropdown-item @click.native="logout">
             <span style="display: block">退出登录</span>
@@ -80,7 +91,7 @@ export default {
     bgColor() {
       return { backgroundColor: this.$store.getters.userInfo.themeColor }
     },
-    ...mapGetters(['sideBar', 'device', 'user', 'avatar', 'sex']),
+    ...mapGetters(['sideBar', 'device', 'user', 'avatar', 'sex', 'fileList']),
     settings() {
       return defaultSettings
     },
@@ -197,6 +208,37 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    @media (prefers-reduced-motion: no-preference) {
+    .auto-rotate {
+        animation: App-logo-spin infinite 15s linear;
+    }
+}
+    @keyframes App-logo-spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+  }
+    .upload-list{
+      display: inline-block;
+      height: 30px;
+      width: 30px;
+      color: #fff;
+      line-height: 30px;
+      box-sizing: border-box;
+      background: #ffffff33;
+      border-radius: 50%;
+      text-align: center;
+      vertical-align: middle;
+      user-select: none;
+      font-size: 18px;
+      line-height: 30px;
+      font-family: Arial Normal,Arial,sans-serif;
+      margin-right: 10px;
+      cursor: pointer;
+    }
     .el-avatar ::v-deep img {
       width: 100%;
     }
@@ -240,3 +282,18 @@ export default {
 }
 </style>
 
+<style lang="scss">
+.el-popover.title-popover {
+  .upload-list-item{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      .el-progress{
+        flex: 1%;
+      }
+    }
+    .upload-list-item+.upload-list-item{
+      margin-top: 10px;
+    }
+}
+</style>

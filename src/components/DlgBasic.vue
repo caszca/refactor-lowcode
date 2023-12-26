@@ -285,9 +285,14 @@ export default {
     },
     async onModalRepeatAdd() {
       this.$set(this.buttonLoading, 'repeatAdd', true)
-      if (this.dlgbasicRepeatAdd && typeof this.dlgbasicRepeatAdd === 'function') {
-        await this.dlgbasicRepeatAdd()
-      } else {
+      // if (this.dlgbasicRepeatAdd !== undefined && typeof this.dlgbasicRepeatAdd === 'function') {
+      //   await this.dlgbasicRepeatAdd()
+      // } else {
+      //   await this._onModalRepeatAdd()
+      // }
+      // 尝试更换接收方法
+      const result = this.dlgbasicRepeatAdd()
+      if (!result) {
         await this._onModalRepeatAdd()
       }
       this.$set(this.buttonLoading, 'repeatAdd', false)

@@ -19,7 +19,7 @@ export default {
     placeholder: { type: String, default: '请选择' },
     searchKey: { type: Object, default: () => ({}) },
     regKey: { type: Object, default: () => ({}) },
-    sortJson: { type: Object, default: () => ({ properties: 'TheOrder', direction: 'ASC' }) },
+    sortJson: { type: Object, default: () => ({ properties: 'id', direction: 'ASC' }) },
     size: { type: String, default: '' },
     filterable: { type: Boolean, default: false },
     autoInit: { type: Boolean, default: true },

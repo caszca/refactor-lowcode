@@ -83,6 +83,7 @@ function getUserInfo() {
 
 // 验证码（用于更换手机号）
 function checkVerCode({ phone, verCode }) {
+  console.log(1223333333)
   return request.post(`/sign/checkVerCode/${phone}?${qs.stringify({ verCode })}`)
 }
 

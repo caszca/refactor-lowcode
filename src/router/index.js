@@ -72,7 +72,7 @@ export const constantRoutes = [
     children: [{
       path: 'Personal',
       name: 'Personal',
-      meta: { title: '账户信息', noCache: true },
+      meta: { title: '信息维护', noCache: true },
       component: () => import('@/views/user/Personal')
     }],
     hidden: true
@@ -82,6 +82,13 @@ export const constantRoutes = [
     name: 'Forget',
     meta: { title: '忘记密码', noCache: true },
     component: () => import('@/views/user/Forget'),
+    hidden: true
+  },
+  {
+    path: '/Register',
+    name: 'Register',
+    meta: { title: '注册账号', noCache: true },
+    component: () => import('@/views/user/Register'),
     hidden: true
   },
   {

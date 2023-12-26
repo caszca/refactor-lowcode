@@ -9,6 +9,9 @@
             </div>
             <div v-else>--</div>
           </div>
+          <div v-else-if="item.field === 'img'">
+            <img style="width: 210px; height: 120px;" :src="form[item.field]" />
+          </div>
           <div v-else-if="item.field === 'pyccType'">
             {{ form[item.field] === 1?'专科': form[item.field] === 2?'本科':'研究生' }}
           </div>
@@ -37,7 +40,7 @@ export default {
         { name: '备注', field: 'remarks', type: 'textarea' }
       ]
     },
-    labelWidth: { type: String, default: '100px' }
+    labelWidth: { type: String, default: 'auto' }
   },
   data() {
     return {

@@ -1,14 +1,14 @@
 <template>
   <el-container>
     <el-header height="80px">
-      <img src="@/assets/img/logo.png" style="width:50px; height:50px;" />
+      <!-- <img src="@/assets/img/logo.png" style="width:50px; height:50px;" /> -->
       <span class="title-span">{{ title }}</span>
     </el-header>
     <el-main>
       <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="off" label-position="right">
         <h1 style="margin-top: 0">{{ title }}</h1>
         <el-form-item prop="account">
-          <el-input v-model="loginForm.account" type="text" auto-complete="on" placeholder="手机号/教职工号" @focus="accountFocus = true" @blur="accountFocus = false">
+          <el-input v-model="loginForm.account" type="text" auto-complete="on" placeholder="手机号/账号" @focus="accountFocus = true" @blur="accountFocus = false">
             <svg-icon slot="prefix" icon-class="axt-s-user" :class="accountFocus ? 'active': ''" />
           </el-input>
         </el-form-item>
@@ -19,10 +19,15 @@
         </el-form-item>
         <div class="display-flex">
           <el-checkbox v-model="loginForm.rememberMe" label="记住密码" />
-          <el-link @click="forgetPassword">
-            <span>忘记密码？</span>
-            <span class="text-color">点我找回</span>
-          </el-link>
+          <div>
+            <el-link class="margin-right: 100px" @click="forgetPassword">
+              <span>忘记密码？</span>
+              <!-- <span class="text-color">点我找回</span> -->
+            </el-link>
+            <el-link @click="registerCount">
+              <span>注册账号</span>
+            </el-link>
+          </div>
         </div>
         <el-button :loading="loading" type="primary" class="button-login" @click.native.prevent="handleLogin">
           {{ loading?'登 录 中...':'登 录' }}
@@ -39,12 +44,12 @@ export default {
   name: 'Login',
   data() {
     return {
-      loginForm: { account: '15505096851', password: 'Axt-1234', rememberMe: false },
-      // loginForm: { account: '', password: '', rememberMe: false },
+      // loginForm: { account: '15505096851', password: 'Axt-1234', rememberMe: false },
+      loginForm: { account: '', password: '', rememberMe: false },
       userInfo: { ...this.$store.getters.userInfo },
       loginRules: {
         // 登录规则
-        account: [{ required: true, message: '请输入手机号/用户名', trigger: ['blur', 'change'] }],
+        account: [{ required: true, message: '请输入手机号/账号', trigger: ['blur', 'change'] }],
         password: [{ required: true, trigger: ['blur', 'change'], message: '密码不能为空' }]
       },
       loading: false, // 加载中
@@ -86,7 +91,7 @@ export default {
             }
             this.$message.success('登录成功')
             // 添加箭头函数是由于vue-router的升级，需要避免 navigation guard 的错误
-            this.$router.push(this.redirect || '/HomePage', () => { })
+            this.$router.push(this.redirect || '/Homepage', () => { })
             // this.$router.push(this.$store.getters.permission_routes[4].children[0].path)
             this.loading = false
           } catch (error) {
@@ -101,7 +106,11 @@ export default {
     // 忘记密码
     forgetPassword() {
       this.$router.replace('/Forget')
+    },
+    registerCount() {
+      this.$router.replace('/Register')
     }
+
   }
 }
 </script>
@@ -133,7 +142,7 @@ export default {
     position: absolute;
     right: 60px;
     z-index: 999;
-    width: 320px;
+    width: 360px;
     top: 50%;
     transform: translateY(-50%);
     padding: 35px;

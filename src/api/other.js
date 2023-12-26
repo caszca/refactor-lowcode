@@ -10,7 +10,13 @@ export default {
   checkAndLogin,
   getLoginOutUrl,
   setTaskClassIds,
-  createContestFoundInfo
+  createContestFoundInfo,
+  checkProject,
+  getProjectSpecialityIndustry,
+  changeViewNum,
+  chooseProject,
+  changeOrderStatus,
+  batchPass
 }
 
 function getKey() {
@@ -115,7 +121,62 @@ function createContestFoundInfo(node) {
     url: '/ProjectFlow/createFoundInfo',
     method: 'post',
     data: {
-      node: JSON.stringify(node)
+      node
     }
+  })
+}
+
+// 课题批量审核
+function checkProject(node) {
+  return request({
+    url: `/ProjectFlow/checkProject`,
+    method: 'post',
+    data: {
+      node
+    }
+  })
+}
+
+// 课题批量审核
+function getProjectSpecialityIndustry() {
+  return request.get('/projectChoose/getProjectSpecialityIndustry')
+}
+
+// 学生浏览量增加
+function changeViewNum(id) {
+  return request({
+    url: `/projectChoose/changeViewNum`,
+    method: 'post',
+    data: {
+      id
+    }
+  })
+}
+
+// 课题选择
+function chooseProject(teacherId, projectId) {
+  return request({
+    url: `/projectChoose/createOrder`,
+    method: 'post',
+    data: {
+      teacherId,
+      projectId
+    }
+  })
+}
+
+// 课题订单提交
+function changeOrderStatus(id) {
+  return request({
+    url: `/projectChoose/changeOrderStatus?id=${id}`,
+    method: 'post'
+  })
+}
+// 一键通过
+function batchPass(applyId) {
+  return request({
+    url: '/administrator/batchPass',
+    method: 'post',
+    data: applyId
   })
 }

@@ -1,5 +1,5 @@
 <template>
-  <DlgBasic ref="dlgBasic" :default-props="defaultDBProps" :dlgbasic-confirm="submit">
+  <DlgBasic ref="dlgBasic" :default-props="defaultDBProps" :dlgbasic-spec-confirm="submit">
     <template slot="mainForm">
       <el-form ref="editForm" :model="form" :rules="formRules" label-width="80px">
         <el-form-item prop="phone" label="新手机号">
@@ -18,7 +18,7 @@
 import DlgBasic from '@/components/DlgBasic'
 import { checkPhone } from '@/utils/formRules'
 import BtnGetVerCode from '@/components/BtnGetVerCode'
-
+import userAPI from '@/api/user'
 export default {
   name: 'DlgChangePhone',
   components: { DlgBasic, BtnGetVerCode },
@@ -68,11 +68,11 @@ export default {
       await this.$refs['editForm'].validate(async valid => {
         if (valid) {
           try {
-            // await UserAPI.checkVerCode(this.editForm)
-            this.showDialog(false, this.editForm)
+            await userAPI.checkVerCode(this.form)
+            this.showDialog(false, this.form)
             this.$emit('update-phone', this.form.phone)
           } catch (error) {
-            error
+            console.log(error)
           }
         }
       })

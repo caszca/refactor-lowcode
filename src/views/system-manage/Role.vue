@@ -3,7 +3,7 @@
     <div v-show="isMain">
       <div class="box-flex">
         <div style="width: 45%">
-          <BaseList :default-props="defaultBLProps" @phmanage-click="phmanageClick" @update-column="updateColumn" />
+          <BaseList :default-props="defaultBLProps" @update-column="updateColumn" />
         </div>
         <!-- 列表右侧-->
         <div style="width:53%; ">
@@ -79,7 +79,7 @@ export default {
           title: { mainTitle: '角色列表' },
           defaultDTHProps: {
             keyWord: { edit: 'SysRole' },
-            buttonProps: { create: { show: true }, update: { show: true }, delete: { show: true }, visible: { show: true }, phmanage: { show: true }},
+            buttonProps: { create: { show: true }, update: { show: true }, delete: { show: true }, visible: { show: true }, phmanage: { show: false }},
             searchPanel: false
           }
         },
@@ -298,9 +298,6 @@ export default {
       } catch (error) {
         this.saveLoading = false
       }
-    },
-    async phmanageClick() {
-      this.$set(this, 'isMain', !this.isMain)
     }
   }
 }

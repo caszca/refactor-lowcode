@@ -1,24 +1,20 @@
 <template>
   <DataTableHeader ref="dataTBLMother" :default-props="defaultProps.defaultDTHProps" :selected-columns.sync="selectedColumns" @init-click="initDataTree" @append-click="appendClick" @edit-click="editClick" @delete-click="deleteClick" @upload-finish="uploadFinish" @batch-create="batchCreate">
-    <!-- <template slot="searchPanel">
-      <slot name="searchPanel"><BtnSearch ref="BtnSearch" :search-name="searchName" :placeholder="searchPlaceholder" :no-advanced-search="noAdvancedSearch" :search-items="searchItems" @search-click="searchClick" @advanced-search-click="advancedSearchClick" /></slot>
-    </template> -->
+    <template slot="moreTopButtons">
+      <slot name="moreTopButtons" />
+    </template>
     <template slot="topOperate">
       <slot name="topOperate" />
-    </template>
-    <template slot="left">
-      <slot name="left" />
     </template>
     <template slot="body">
       <el-card shadow="never">
         <slot slot="header" name="cardTitle" />
         <template v-if="title" slot="header">
           <span>{{ title.mainTitle }}</span>
-          <slot name="titleName" />
           <span v-if="title.subTitle">&nbsp;|&nbsp;<strong>{{ title.subTitle || "全部" }}</strong></span>
         </template>
-        <el-table ref="dataTree" v-adaptive v-loading="loading" :lazy="lazy" :load="lazyLoad" height="100%" border :data="treeTableData" :tree-props="{children: 'children', hasChildren: 'hasChildren'}" row-key="id" highlight-current-row :default-expand-all="expandFlag" :expand-row-keys="['-1']" @current-change="handleNodeClick" @select="handleSelection" @selection-change="handleSelectionChange" @select-all="handleSelectionAll">
-          <el-table-column v-if="checkFlag" type="selection" fixed width="50px" />
+        <el-table ref="dataTree" v-adaptive :lazy="lazy" :load="lazyLoad" height="100%" border :data="treeTableData" :tree-props="treeProps" row-key="id" highlight-current-row :default-expand-all="expandFlag" :expand-row-keys="['-1']" @current-change="handleNodeClick" @select="handleSelection" @selection-change="handleSelectionChange" @select-all="handleSelectionAll">
+          <el-table-column v-if="checkFlag" type="selection" fixed width="55px" />
           <el-table-column v-for="(item, index) in tableColumnItem" :key="index" :show-overflow-tooltip="true" :label="item.showName" :width="item.width" align="left">
             <template #default="scope">
               <span v-if="item.columnName === 'icon'">
@@ -33,7 +29,7 @@
           </el-table-column>
           <el-table-column v-if="operateFlag" fixed="right" label="操作" :width="operateWidth">
             <template #default="scope">
-              <el-button type="primary" icon="el-icon-plus" size="mini" title="新增下级" @click="appendClick(scope.row)" />
+              <el-button v-if="button.create.show" type="primary" icon="el-icon-plus" size="mini" :title="button.create.name" @click="appendClick(scope.row)" />
               <el-button v-if="button.update.show" type="info" icon="el-icon-edit" size="mini" :title="button.update.name" @click="editClick(scope.row)" />
               <el-button v-if="button.delete.show" type="danger" icon="el-icon-delete" size="mini" :title="button.delete.name" @click="remove([scope.row])" />
               <el-button v-if="button.up.show" type="warning" icon=" el-icon-top" size="mini" :title="button.up.name" @click="changeNodes('up',scope.row)" />
@@ -54,11 +50,9 @@
 
 import DataTableHeader from '@/components/DataTableHeader'
 import treeAPI from '@/api/tree'
-// import variables from '@/assets/css/variables.scss'
+import CONSTANT from '@/constant'
 import adaptive from '@/directive/el-table'
-// import BtnSearch from '@/components/BtnSearch'
 import moment from 'moment'
-import roleAPI from '@/api/role'
 
 // 懒加载，新增第一个节点不展开，不出现小箭头，暂时未解决
 // 遗留思路，新增第一个节点，让上级节点出现小箭头
@@ -181,17 +175,6 @@ export default {
       }
       return false
     },
-    // searchItems() {
-    //   return this.defaultProps.searchItems ? this.defaultProps.searchItems : []
-    // },
-    hasOwnGet() {
-      if (Object.prototype.hasOwnProperty.call(this.defaultProps, 'somFlags')) {
-        if (Object.prototype.hasOwnProperty.call(this.defaultProps, 'hasOwnGet')) {
-          return this.defaultProps.someFlags.hasOwnGet
-        }
-      }
-      return false
-    },
     initSearchWords() {
       return this.defaultProps.initSearchWords ? this.defaultProps.initSearchWords : { }
     },
@@ -200,6 +183,32 @@ export default {
     },
     bottomOffset() {
       return this.defaultProps.bottomOffset ? this.defaultProps.bottomOffset : 0
+    },
+    searchName() {
+      if (Object.prototype.hasOwnProperty.call(this.defaultProps, 'searchPanel')) {
+        return this.defaultProps.searchPanel.name ? this.defaultProps.searchPanel.name : ''
+      }
+      return ''
+    },
+    searchPlaceholder() {
+      if (Object.prototype.hasOwnProperty.call(this.defaultProps, 'searchPanel')) {
+        return this.defaultProps.searchPanel.placeholder ? this.defaultProps.searchPanel.placeholder : '请输入名称'
+      }
+      return '请输入名称'
+    },
+    noAdvancedSearch() {
+      if (Object.prototype.hasOwnProperty.call(this.defaultProps, 'someFlags')) {
+        if (Object.prototype.hasOwnProperty.call(this.defaultProps.someFlags, 'noAdvancedSearch')) {
+          return this.defaultProps.someFlags.noAdvancedSearch
+        }
+      }
+      return true
+    },
+    searchItems() {
+      return this.defaultProps.searchItems ? this.defaultProps.searchItems : []
+    },
+    treeProps() {
+      return this.defaultProps.treeProps ? this.defaultProps.treeProps : { children: 'children', hasChildren: 'hasChildren' }
     }
   },
   mounted() {
@@ -208,6 +217,7 @@ export default {
     const arr = [
       this.button.delete.show,
       this.button.update.show,
+      this.button.create.show,
       this.button.up.show,
       this.button.down.show
     ]
@@ -215,7 +225,7 @@ export default {
       acc = cur ? acc + 1 : acc
       return acc
     }, 1)
-    var width = num * 46
+    var width = (num + this.button.count.num) * 46
     if (width < 60) {
       width = 60
     }
@@ -271,32 +281,24 @@ export default {
     async initDataTree(parentId = -1) {
       this.loading = true
       try {
-        if (this.defaultProps.someFlags && this.defaultProps.someFlags.hasOwnGet) {
-          if (this.defaultProps.keyWord === 'RolePhManage') {
-            const res = await roleAPI.getRoleMenuField(this.defaultProps.roleId)
-            this.treeTableData = res.data
-            this.loading = false
-          }
-          this.$emit('self-init')
-        } else {
-          var view = this.keyWord.view
-          var parentNode = { id: parentId, allNodeNames: '' }
-          const res = await treeAPI.getAllNodes({
-            keyWords: view,
-            parentId: parentNode.id,
-            virtualRootFlag: this.virtualRootFlag,
-            searchKey: this.searchKey,
-            lazy: this.lazy,
-            preName: parentNode.allNodeNames,
-            sort: this.sort
-          })
-          this.treeTableData = res.data
-          this.loading = false
-        }
+        var view = this.keyWord.view
+        var parentNode = { id: parentId, allNodeNames: '' }
+        const res = await treeAPI.getAllNodes({
+          keyWords: view,
+          parentId: parentNode.id,
+          virtualRootFlag: this.virtualRootFlag,
+          searchKey: this.searchKey,
+          lazy: this.lazy,
+          preName: parentNode.allNodeNames,
+          sort: this.sort
+        })
+        this.treeTableData = res.data
+        // }
       } catch (error) {
         this.loading = false
         console.log(error)
       }
+      this.loading = false
     },
     // #endregion
 
@@ -393,13 +395,64 @@ export default {
     },
     uploadFinish() {
       this.initDataTree()
+    },
+    // 按钮查询
+    searchClick(searchInfo) {
+      var searchKey = {}
+      var regKey = {}
+      // var andor = {}
+      if (typeof this.searchName === 'string') {
+        this.$set(searchKey, this.searchName, searchInfo)
+        this.$set(regKey, this.searchName, CONSTANT.SEARCH_OPERATOR.LIKE)
+      // } else {
+      //   for (var i=0;i<this.searchName.length;i++) {
+      //     this.$set(searchKey, this.searchName[i], searchInfo)
+      //     this.$set(regKey, this.searchName[i], CONSTANT.SEARCH_OPERATOR.LIKE)
+      //     this.$set(andor, this.searchName[i], false)
+      //   }
+      //   this.$set(this.nowSearchWords, 'andor', andor)
+      }
+      this.$set(this.nowSearchWords, 'searchKey', searchKey)
+      this.$set(this.nowSearchWords, 'regKey', regKey)
+      setTimeout(() => {
+        this.initDataList()
+      }, 500)
+    },
+    advancedSearchClick(searchInfo) {
+      var searchKey = {}
+      var regKey = {}
+      var andor = {}
+      const keys = Object.keys(searchInfo)
+      for (var i = 0; i < keys.length; i++) {
+        const item = this.searchItems.filter(item => item.field === keys[i])
+        if (item.length > 0) {
+          if (item[0].type === 'input') {
+            this.$set(searchKey, keys[i], searchInfo[keys[i]])
+            this.$set(regKey, keys[i], CONSTANT.SEARCH_OPERATOR.LIKE)
+            if (item[0].doubleWords && item[0].doubleWords.length > 0) {
+              this.$set(andor, keys[i], false)
+              item[0].doubleWords.forEach(e => {
+                console.log(e)
+                this.$set(searchKey, e, searchInfo[keys[i]])
+                this.$set(regKey, keys[i], CONSTANT.SEARCH_OPERATOR.LIKE)
+                this.$set(andor, e, false)
+              })
+            }
+          } else if (item[0].type === 'select') {
+            this.$set(searchKey, keys[i], searchInfo[keys[i]])
+          } else if (item[0].type === 'date') {
+            this.$set(searchKey, keys[i], { beginDate: searchInfo[keys[i]][0], endDate: searchInfo[keys[i]][1] })
+            this.$set(regKey, keys[i], CONSTANT.SEARCH_OPERATOR.RANGE)
+          }
+        }
+      }
+      this.$set(this.nowSearchWords, 'searchKey', searchKey)
+      this.$set(this.nowSearchWords, 'regKey', regKey)
+      this.$set(this.nowSearchWords, 'andor', andor)
+      setTimeout(() => {
+        this.initDataList()
+      }, 500)
     }
   }
 }
 </script>
-<style scoped>
-
-::v-deep .el-table--border td:first-child .cell {
-    padding-left: 14px;
-}
-</style>

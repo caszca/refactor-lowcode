@@ -11,7 +11,7 @@
 <template>
   <DlgBasic ref="dlgBasic" :default-props.sync="defaultProps.defaultDBProps" :dlgbasic-confirm="confirm" :dlgbasic-submit="submit" :dlgbasic-spec-confirm="specConfirm" @close-dialog="onCloseDialog" @open-dialog="openDialog">
     <template slot="mainForm">
-      <el-form ref="formPanel" :rules="formRules" :model="form" label-suffix=":" :label-width="labelWidth">
+      <el-form ref="formPanel" :rules="formRules" :model="form" label-suffix=":" :label-width="labelWidth" :style="{ whiteSpace: 'nowrap' }">
         <slot name="upItems" />
         <div v-for="(item, index) in formItems" :key="index">
           <el-form-item v-if="item.type!=='textarea'" :prop="item.field" :label="item.name">
@@ -28,8 +28,8 @@
               </el-col>
             </el-row>
             <!-- 密码框 -->
-            <password v-else-if="item.type==='password'" v-model="form[item.field]" :placeholder="item.placeholder?item.placeholder:'请输入'" :has-reset="item.hasReset" :disabled="item.disabled" @input="resetPass" />
-            <!-- <el-input v-else-if="item.type==='password'" type="password" v-model="form[item.field]" :placeholder="item.placeholder?item.placeholder:'请输入'" :disabled="item.disabled" /> -->
+            <!-- <password v-else-if="item.type==='password'" v-model="form[item.field]" :placeholder="item.placeholder?item.placeholder:'请输入'" :has-reset="item.hasReset" :disabled="item.disabled" @input="resetPass" /> -->
+            <el-input v-else-if="item.type==='password'" v-model="form[item.field]" type="password" :placeholder="item.placeholder?item.placeholder:'请输入'" :disabled="item.disabled" />
             <!-- 开关 -->
             <el-switch v-else-if="item.type==='switch'" v-model="form[item.field]" />
             <!-- 单选 -->
@@ -81,6 +81,8 @@
             <el-date-picker v-else-if="item.type==='date'" v-model="form[item.field]" type="datetime" placeholder="选择日期时间" />
             <!-- 单列日期框 -->
             <el-date-picker v-else-if="item.type==='day'" v-model="form[item.field]" type="date" placeholder="选择日期" />
+            <!-- 时间范围选择器：带时间对应的字段名rangeWords(Array),注意：field对应字段不要与表中字段同名 -->
+            <el-date-picker v-else-if="item.type==='date_range'" v-model="form[item.field]" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" @change="setDateRange($event, item.rangeWords)" />
             <!-- 简单下拉选择框 -->
             <el-select v-else-if="item.type==='select_noremote'" v-model="form[item.field]" :disabled="item.disabled" :multiple="item.multiple" placeholder="请选择">
               <el-option v-for="(sitem,sindex) in item.options" :key="sindex" :label="sitem[item.label?`${item.label}`:'name']" :value="sitem.id" />
@@ -135,7 +137,7 @@ import SimpleSelect from '@/components/SimpleSelect'
 import ElUploadSelf from '@/components/ElUploadSelf'
 import dlgAPI from '@/utils/forDialog'
 import SimpleTreeSelect from '@/components/SimpleTreeSelect'
-import Password from '@/components/Password'
+// import Password from '@/components/Password'
 import IconSelect from '@/components/icon-select/Index'
 import SimpleUpload from '@/components/SimpleUpload'
 import { resetForm } from '@/utils/common'
@@ -146,7 +148,8 @@ import CONSTANT from '@/constant'
 
 export default {
   name: 'SimpleDialog',
-  components: { DlgBasic, SimpleSelect, ElUploadSelf, SimpleTreeSelect, Password, IconSelect, SimpleUpload },
+  components: { DlgBasic, SimpleSelect, ElUploadSelf, SimpleTreeSelect, IconSelect, SimpleUpload },
+  // components: { DlgBasic, SimpleSelect, ElUploadSelf, SimpleTreeSelect, Password, IconSelect, SimpleUpload },
   props: {
     defaultProps: {
       type: Object,
@@ -244,12 +247,32 @@ export default {
           await this.$refs.upload[0].clearFiles()
         }
       })
+      this.formItems.forEach(e => {
+        if (e.type === 'date_range') {
+          this.$set(this.form, e.field, [this.form[e.rangeWords[0]], this.form[e.rangeWords[1]]])
+        }
+      })
       this.$refs.dlgBasic.showDialog(val, this.form)
       setTimeout(() => { this.$refs.formPanel.clearValidate() }, 100)
     },
     // 窗口打开
     async openDialog(row) {
       this.$emit('open-dialog', row)
+    },
+    /**
+     * @param {*} value 值(Array)
+     * @param {*} key 值对应的表名(Array)
+     */
+    setDateRange(value, key) {
+      console.log(value)
+      if (key.length < 2) {
+        // 未自定义表名
+        this.form.startDay = value[0]
+        this.form.endDay = value[1]
+      } else {
+        this.form[key[0]] = value[0]
+        this.form[key[1]] = value[1]
+      }
     },
     async resetPass(password) {
       const phone = this.form.phone
@@ -302,10 +325,17 @@ export default {
             //     this.$refs.dlgBasic.showDialog(false, this.form)
             //   }
           }
+          // 检查父节点是否有刷新方法，修复用户管理页面刷新问题
+          if (Object.prototype.hasOwnProperty.call(this.$parent, 'initDataList')) {
+            this.$parent.initDataList()
+          }
         }
       } catch (error) {
-        this.defaultProps.someFlags.autoSaveClose = false
+        if (this.defaultProps.someFlags) {
+          this.defaultProps.someFlags.autoSaveClose = false
+        }
         this.$set(this.$refs.dlgBasic.buttonLoading, 'confirm', false)
+        this.$set(this.$refs.dlgBasic.buttonLoading, 'continue', false)
       }
     },
     async confirm(option, type) {

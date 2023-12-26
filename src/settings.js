@@ -3,7 +3,7 @@ module.exports = {
   /**
    * @description 网站标题
    */
-  title: '封装框架系统',
+  title: '轴承寿命预测系统',
 
   /**
    * @description 是否显示 tagsView

@@ -119,12 +119,26 @@ export function checkPassword(rule, value, callback) {
   callback()
 }
 
-export function checkIsNumber(str) {
-  const reg = /^[0-9]*$/ // 数字
-  if (!reg.test(str)) {
-    return false
+export function checkIsNumber(rule, value, callback) {
+  if (value === '') {
+    callback(new Error('数据不能为空'))
   }
-  return true
+  const reg = /^\d+(\.\d{1,2})?$/
+  if (!reg.test(value)) {
+    callback(new Error('请输入正确的数字格式，最多可输入两位小数'))
+  }
+  callback()
+}
+
+export function checkIsNumber2(rule, value, callback) {
+  if (value === '') {
+    callback()
+  }
+  const reg = /^\d+(\.\d{1,2})?$/
+  if (!reg.test(value)) {
+    callback(new Error('请输入正确的数字格式，最多可输入两位小数'))
+  }
+  callback()
 }
 
 // 首尾空格验证

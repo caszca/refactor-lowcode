@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import { getEncryptKeyWord } from '@/utils/rsaEncrypt'
+// import { getEncryptKeyWord } from '@/utils/rsaEncrypt'
 import constant from '@/constant'
 
 export default {
@@ -11,8 +11,7 @@ export default {
 
 // 列表结构的新增/编辑
 async function editOneNode(keyWords, node) {
-  console.log(keyWords, node)
-  keyWords = await getEncryptKeyWord(keyWords)
+  // keyWords = await getEncryptKeyWord(keyWords)
   return request({
     url: '/dataList/editOneNode',
     method: 'post',
@@ -24,19 +23,20 @@ async function editOneNode(keyWords, node) {
 }
 // 删除一个或者多个节点
 async function delOneOrManyNodes(keyWords, ids) {
-  keyWords = await getEncryptKeyWord(keyWords)
+  // keyWords = await getEncryptKeyWord(keyWords)
   return request({
     url: '/dataList/delOneOrManyNodes',
     method: 'post',
     data: {
       keyWords: keyWords,
-      ids: await getEncryptKeyWord(ids.join(constant.SPLIT_OPERATOR.COMMA))
+      ids: ids.join(constant.SPLIT_OPERATOR.COMMA)
+      // ids: await getEncryptKeyWord(ids.join(constant.SPLIT_OPERATOR.COMMA))
     }
   })
 }
 // 列表结构的节点上下移
 async function changeNodeOrder(keyWords, nodeId, up, moveSearchKeys, moveRegKeys) {
-  keyWords = await getEncryptKeyWord(keyWords)
+  // keyWords = await getEncryptKeyWord(keyWords)
   return request({
     url: '/dataList/changeNodeOrder',
     method: 'post',
@@ -52,8 +52,7 @@ async function changeNodeOrder(keyWords, nodeId, up, moveSearchKeys, moveRegKeys
 
 // 列表结构的查询
 async function getSomeRecords({ keyWords, pageInfo, treeInfo, searchKey, sort, reg, andor }) {
-  console.log({ keyWords, pageInfo, treeInfo, searchKey, sort, reg, andor })
-  keyWords = await getEncryptKeyWord(keyWords)
+  // keyWords = await getEncryptKeyWord(keyWords)
   return request({
     url: '/dataList/getSomeRecords',
     method: 'post',
@@ -61,9 +60,11 @@ async function getSomeRecords({ keyWords, pageInfo, treeInfo, searchKey, sort, r
       keyWords,
       pageInfo,
       treeInfo,
-      searchKey: await getEncryptKeyWord(JSON.stringify(searchKey)),
+      searchKey,
+      // searchKey: await getEncryptKeyWord(JSON.stringify(searchKey)),
       sort,
-      reg: await getEncryptKeyWord(JSON.stringify(reg)),
+      reg,
+      // reg: await getEncryptKeyWord(JSON.stringify(reg)),
       andor
     }
   })

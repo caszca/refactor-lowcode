@@ -1,7 +1,6 @@
 <template>
   <el-container>
     <el-header height="100px">
-      <img src="@/assets/img/logo.png" />
       <span class="title-span">{{ settings.title }}</span>
     </el-header>
     <el-main>

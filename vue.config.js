@@ -29,10 +29,11 @@ module.exports = {
     proxy: {
       // [process.env.VUE_APP_BASE_API]
       '/api': {
-        target: 'http://localhost:8011',
-        // target: 'https://xgxtydd.ahut.edu.cn',
+        target: 'http://localhost:8203',
+        // target: 'http://graduation-project-dev.ahaxt.com',
         // target: 'http://learn-industrial.ahaxt.com/api',
-        // target: 'http://192.168.2.123:8203',
+        // target: 'http://192.168.2.108:8203',
+        // target: 'http://192.168.2.125:8203',
         pathRewrite: {
           '^/api': '/'
         }, // 给代理命名后，在访问时把命名删除掉。即 api/xx = target/xx

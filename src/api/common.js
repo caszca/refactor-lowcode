@@ -5,13 +5,15 @@ export default {
   deleteFile,
   uploadMany,
   downloadFile,
-  templateFile
+  templateFile,
+  templateIndustry,
+  templateBaseUser
 }
 
-// oss文件上传-上传到public
+// minio文件上传-上传到public
 // type: 文件上传的类型 比如，1表示头像。relationId 关联表id,如果type=1 则relationId则表示userId
 /**
- * oss文件上传-上传到public
+ * minio文件上传-上传到public
  * @param file
  * @param relationId
  * @param type
@@ -28,7 +30,7 @@ function upload(params) {
   })
 }
 
-// 上传多个文件到oss
+// 上传多个文件到minio
 function uploadMany(params) {
   const formData = new FormData()
   Object.keys(params).forEach(key => {
@@ -41,7 +43,7 @@ function uploadMany(params) {
     }
   })
   return request({
-    url: `/common/oss/uploadMany`,
+    url: `/common/minio/uploadMany`,
     method: 'post',
     data: formData
   })
@@ -52,15 +54,39 @@ function deleteFile(fileIds) {
   return request.delete(`/common/minio/deleteFile?ossFileIds=${fileIds}`)
 }
 
-// oss文件流下载oss-ykt
+// minio文件流下载minio-ykt
 function downloadFile(id) {
-  return request.get(`/common/minio/downloadFile?ossFileId=${id}`, { responseType: 'blob' })
+  return request({
+    url: '/common/minio/downloadFile',
+    method: 'post',
+    data: { id: id },
+    responseType: 'blob'
+  })
+  // return request.get(`/common/minio/downloadFile?ossFileId=${id}`, { responseType: 'blob' })
 }
 
-// 工作人员模板下载
+// 面向专业模板下载
 function templateFile() {
   return request({
-    url: `/worker/template`,
+    url: `/importAndExport/speciality/template`,
+    method: 'post',
+    responseType: 'blob'
+  })
+}
+
+// 面向专业模板下载
+function templateIndustry() {
+  return request({
+    url: `/importAndExport/industry/template`,
+    method: 'post',
+    responseType: 'blob'
+  })
+}
+
+// 用户模板下载
+function templateBaseUser() {
+  return request({
+    url: `/importAndExport/user/template`,
     method: 'post',
     responseType: 'blob'
   })

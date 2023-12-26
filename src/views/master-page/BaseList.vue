@@ -1,6 +1,6 @@
 <template>
   <div>
-    <DataTableList ref="dataTableList" :default-props="defaultProps.defaultDTLProps" @append-click="appendClick" @edit-click="editClick" @update-column="updateColumn" @delete-click="deleteClick" @audit-click="auditClick" @export-click="exportClick" @more1-click="more1Click" @more2-click="more2Click" @phmanage-click="phmanageClick" @after-init-data="afterInitData" @view-click="viewClick" @self-init="selfInit" @batch-create="batchCreate" @selectedColumnsChange="selectedColumnsChange" @send-click="sendClick">
+    <DataTableList ref="dataTableList" :default-props="defaultProps.defaultDTLProps" @append-click="appendClick" @edit-click="editClick" @update-column="updateColumn" @delete-click="deleteClick" @audit-click="auditClick" @export-click="exportClick" @more1-click="more1Click" @more2-click="more2Click" @after-init-data="afterInitData" @view-click="viewClick" @self-init="selfInit" @batch-create="batchCreate" @selectedColumnsChange="selectedColumnsChange" @send-click="sendClick" @input="onInput">
       <!--数据操作按钮类 -->
       <template slot="searchPanel">
         <slot name="searchPanel" />
@@ -17,6 +17,9 @@
       <template #1006name="{ row }">
         <slot name="1006name" :row="row" />
       </template>
+      <template v-for="item in defaultProps.nameList" :slot="item" slot-scope="{ row }">
+        <slot :name="item" :row="row" />
+      </template>
       <template #commitStatus="{ row }">
         <slot name="commitStatus" :row="row" />
       </template>
@@ -26,12 +29,21 @@
       <template #rightOperate="{ row }">
         <slot name="rightOperate" :row="row" />
       </template>
+      <template #rightbtn>
+        <slot name="rightbtn" />
+      </template>
+      <template #topAlert>
+        <slot name="header" />
+      </template>
     </DataTableList>
     <slot name="dlg">
       <!-- 简单窗口 -->
       <SimpleDialog ref="simpleDialog" :default-props="defaultProps.defaultSDProps" :simpledialog-confirm="confirm" :simpledialog-spec-confirm="specConfirm" @update-record="initDataList" @submit-more="submitMore" @simple-select-change="SimpleSelectChange">
         <template #otherItems>
           <slot name="otherItems" />
+        </template>
+        <template #bottomItems>
+          <slot name="bottomItems" />
         </template>
         <template #upItems>
           <slot name="upItems" />
@@ -156,8 +168,8 @@ export default {
     selectedColumnsChange(val) {
       this.$emit('selectedColumnsChange', val)
     },
-    selfInit(val) {
-      this.$emit('self-init', val)
+    selfInit(val, val2, searchWords) {
+      this.$emit('self-init', val, val2, searchWords)
     },
     async initDataList() {
       this.$refs.dataTableList.initDataList()
@@ -188,14 +200,11 @@ export default {
         this.$emit('append-click')
       } else {
         Object.assign(this.form, resetForm(this.form))
-        // console.log(this.form)
-        // resetForm(this.form)
         this.$refs.simpleDialog.showDialog(true, this.form)
       }
     },
     async editClick(row) {
       if (!Object.prototype.hasOwnProperty.call(this.thisEvents, 'edit-click')) {
-        // console.log(row)
         this.openDlg('edit', row)
       } else {
         this.$emit('edit-click', row)
@@ -241,12 +250,8 @@ export default {
     async sendClick(row) {
       this.$emit('send-click', row)
     },
-    async phmanageClick() {
-      if (Object.prototype.hasOwnProperty.call(this.thisEvents, 'phmanage-click')) {
-        this.$emit('phmanage-click')
-      } else {
-        console.log('字段管理失效！！！')
-      }
+    onInput(val) {
+      this.$emit('input', val)
     },
     // #endregion
 
@@ -289,11 +294,14 @@ export default {
     },
     SimpleSelectChange(val, field, form, options) {
       this.$emit('simple-select-change', val, field, form, options)
+    },
+    showDialog(val, data) {
+      this.$refs.simpleDialog.showDialog(val, data)
     }
-    // showDialog(val, data) {
-    //   this.$refs.simpleDialog.showDialog(true, this.form)
-    // }
   }
   // #endregion
 }
 </script>
+
+
+
