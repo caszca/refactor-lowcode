@@ -57,7 +57,7 @@ export default {
       callback()
     }
     return {
-      title: '轴承寿命预测系统',
+      title: '封装框架系统',
       passwordPercent: 0,
       customColors: [
         { color: '#f56c6c', percentage: 20 }, { color: '#e6a23c', percentage: 40 },
